@@ -10,22 +10,21 @@ Original repo: https://github.com/pangzss/pytorch-CTVSUM
 
 ## Installation
 ```shell
-git clone https://github.com/pangzss/pytorch-CTVSUM.git
-cd pytorch-CTVSUM
+git clone git@github.com:chaudatascience/robust_unsup_video_summarization.git
+cd robust_unsup_video_summarization
 conda env create -f environment.yml
 conda activate ctvsum
 ```
 
-## Dataset preparation
-We use three datasets in our paper: [**TVSum**](https://github.com/yalesong/tvsum), [**SumMe**](https://gyglim.github.io/me/vsum/index.html), and a random subset of [**Youtube8M**](https://research.google.com/youtube8m/).
+## Datasets: 
+Datasets are stored in 
 
-TVSum and SumMe are used for training and evaluation, and Youtube8M is only used for training.
+`/projectnb/ivc-ml/chaupham/cs585_project/ctvsum/data`
 
-To prepare the datasets, 
+copy this folder into robust_unsup_video_summarization folder.
 
-1. Download raw videos from TVSum and SumMe and put them in ./data/raw
-2. Download the extracted features from [**GoogleDrive**](https://drive.google.com/drive/folders/1ruIbB8LoJ1sbF_q_yihLuolE4JpEgK8G?usp=sharing) (GoogLeNet features for TVSum and SumMe, kindly provided by the authors of [**DRDSN**](https://github.com/KaiyangZhou/pytorch-vsumm-reinforce), and quantized Inception features for Youtube8M).
-3. Put eccv_* files in ./data/interim, and unzip selected_features.zip in ./data/interim/youtube8M/
+
+
 
 ## Training and Evaluation
 ### Evaluation with only pretrained features
