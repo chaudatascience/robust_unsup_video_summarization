@@ -1,11 +1,12 @@
 # pytorch-CTVSUM
 
-This repository contains the official Pytorch implementation of the paper
-> [**Contrastive Losses Are Natural Criteria for Unsupervised Video Summarization**](https://arxiv.org/abs/2211.10056)
-> 
-> Zongshang Pang, Yuta Nakashima, Mayu Otani, Hajime Nagahara
-> 
-> In WACV2023
+Original repo: https://github.com/pangzss/pytorch-CTVSUM
+
+[Paper](https://openaccess.thecvf.com/content/WACV2023/papers/Pang_Contrastive_Losses_Are_Natural_Criteria_for_Unsupervised_Video_Summarization_WACV_2023_paper.pdf)  
+
+[Supp](https://openaccess.thecvf.com/content/WACV2023/supplemental/Pang_Contrastive_Losses_Are_WACV_2023_supplemental.pdf) 
+
+
 
 ## Installation
 ```shell
