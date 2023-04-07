@@ -17,7 +17,7 @@ conda activate ctvsum
 ```
 
 ## Datasets: 
-Datasets are stored in 
+Datasets are stored on SCC: 
 
 `/projectnb/ivc-ml/chaupham/cs585_project/ctvsum/data`
 
