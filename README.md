@@ -1,4 +1,4 @@
-# pytorch-CTVSUM
+# robust_unsup_video_summarization
 
 Original repo: https://github.com/pangzss/pytorch-CTVSUM
 
@@ -73,16 +73,4 @@ hparams:
 ```bash
 ./run_ablation.sh
 ./run_y8.sh
-```
-## Acknowledgement
-We would like to thank [**DRDSN**](https://github.com/KaiyangZhou/pytorch-vsumm-reinforce), which provides the extracted features and the evaluation code for TVSum and SumMe. Moreover, we are thankful to the insightful work [**Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere**](https://arxiv.org/abs/2005.10242), which inspired our work.
-
-## Citation
-```bibtex
-@inproceedings{pang2023contrastive,
-  title={Contrastive Losses Are Natural Criteria for Unsupervised Video Summarization},
-  author={Pang, Zongshang and Nakashima, Yuta and Otani, Mayu and Nagahara, Hajime},
-  booktitle={WACV},
-  year={2023}
-}
 ```
