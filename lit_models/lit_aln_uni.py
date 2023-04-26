@@ -34,6 +34,8 @@ spearman = get_rc_func('spearmanr')
 class LitModel(pl.LightningModule):
     def __init__(self, cfg, hpms):
         super().__init__()
+        self.use_neg = cfg.use_neg
+        self.use_rince = cfg.use_rince
         self.is_raw = cfg.is_raw
         self.use_unq = cfg.use_unq
         self.use_unif = cfg.use_unif
@@ -98,7 +100,54 @@ class LitModel(pl.LightningModule):
         raise NotImplementedError("Not implemented yet")
 
     def get_values_with_neg_rince(self, feats, proj, scores, train = True):
-        raise NotImplementedError("Not implemented yet")
+        assert (len(feats.shape) == 3) and (len(proj.shape) == 3)
+        with torch.no_grad():
+            norm_raw = F.normalize(feats, p=2, dim=-1)
+            xy_raw = torch.einsum('bmc, bnc -> bmn', norm_raw, norm_raw)
+        norm_proj = F.normalize(proj, p=2, dim=-1)
+        xy = torch.einsum('bmc, bnc -> bmn', norm_proj, norm_proj)
+        sort_ids = torch.argsort(xy_raw, -1, descending=True)
+
+        diff_mat = 2 - 2 * xy
+        L = feats.shape[1]
+        S = int(L * self.hpms.ratio_s) 
+        K1 = int(L * self.hpms.ratio_k1)
+
+        S_prime = L - (S+K1)
+    
+        # RINCE Algorithm
+        # q = self.hpms.q
+        rince_q = self.hpms.rince_q
+        rince_lam = self.hpms.rince_lam
+        pos = torch.gather(diff_mat, -1, sort_ids[:,:,S:S+K1])
+        neg = torch.gather(diff_mat, -1, sort_ids[:,:,S_prime:S_prime+K1])
+    
+        # Calculate L_neg
+        neg_scalar = neg.exp().sum(dim=-1, keepdim = True).pow(rince_q).mul(rince_lam).div(rince_q)
+        
+        # mean(pos - L_neg)
+        laln = (pos.mul(rince_q).exp().div(rince_q) - neg_scalar).mean(dim=-1).log()
+
+        
+        lunif = diff_mat.mul(-2).exp().mean(dim=-1).log()
+
+        if train:
+            s = 20
+            seg = rearrange(proj, 'b (s l) c -> (b s) l c', s=s)
+            seg_feats = F.normalize(seg.mean(dim=1), dim=1) # (b s) c
+            fv_xy = torch.einsum("bmc, nc -> bmn", norm_proj, seg_feats) # b m (b s)
+            
+            mask = torch.ones_like(fv_xy)
+            # for i in range(len(mask)):
+            #     mask[i,:,i * s : (i+1) * s] = 0
+            lunif_fv = (fv_xy.mul(4).exp() * mask).sum(dim=-1) / mask.sum(dim=-1)
+            lunif_fv = lunif_fv.log()
+            unq_target = (lunif_fv - lunif_fv.min(dim=-1, keepdim=True)[0]) / (lunif_fv.max(dim=-1, keepdim=True)[0] - lunif_fv.min(dim=-1, keepdim=True)[0]).add(1e-9)
+            unq_target = unq_target * 0.5 + 0.25
+            lunq = self.bce(scores, 1 - unq_target.detach())
+            return laln, lunif, lunif_fv, lunq
+        else: 
+            return laln, lunif
 
     def training_step(self, batch, batch_idx):
         out, scores = self(batch)

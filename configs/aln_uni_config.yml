@@ -36,4 +36,4 @@ is_raw: False
 use_unq: True 
 use_unif: True
 use_neg: True
-use_rince: False
+use_rince: True
