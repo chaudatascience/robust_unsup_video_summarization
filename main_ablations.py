@@ -200,7 +200,7 @@ if __name__ == "__main__":
         print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(np.mean(results['F1']),
                                                                     np.mean(results['tau']), 
                                                                     np.mean(results['rho'])))
-        print(f'{configs.data.name}_{configs.data.setting}_trained_lunif_{configs.use_unif}_unq_{configs.use_unq}')
+        print(f'{configs.data.name}_{configs.data.setting}_trained_lunif_{configs.use_unif}_unq_{configs.use_unq}_neg_{configs.use_neg}_rince_{configs.use_rince}')
     else: 
         trainer = Trainer.from_argparse_args(trainer_opt, 
                                         **trainer_kwargs,
@@ -213,4 +213,4 @@ if __name__ == "__main__":
         if configs.is_raw:
             print(f'{configs.data.name}_raw_lunif_{configs.use_unif}')
         else: 
-            print(f'{configs.data.name}_lunif_{configs.use_unif}_unq_{configs.use_unq}')
+            print(f'{configs.data.name}_lunif_{configs.use_unif}_unq_{configs.use_unq}_neg_{configs.use_neg}_rince_{configs.use_rince}')
