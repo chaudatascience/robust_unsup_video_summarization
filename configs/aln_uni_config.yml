@@ -22,7 +22,7 @@ hparams:
   n_layer: 4
   n_head: 1
   rince_q: 0.1
-  rince_lam: 0.1
+  rince_lam: 0.5
 setup:
   is_logger: False
   wandb_name: video-sum

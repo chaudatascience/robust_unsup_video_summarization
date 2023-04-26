@@ -170,10 +170,10 @@ class LitModel(pl.LightningModule):
         neg = torch.gather(diff_mat, -1, sort_ids[:,:,S_prime:S_prime+K1])
     
         # Calculate L_neg
-        neg_scalar = neg.exp().sum(dim=-1, keepdim = True).pow(rince_q).mul(rince_lam).div(rince_q)
+        neg_scalar = neg.exp().sum(dim=-1, keepdim = True).mul(rince_lam).pow(rince_q).div(rince_q)
         
         # mean(pos - L_neg)
-        laln = (pos.mul(rince_q).exp().div(rince_q) - neg_scalar).mean(dim=-1).log()
+        laln = (pos.mul(rince_q).exp().div(rince_q) - neg_scalar).mean(dim=-1)
 
         
         lunif = diff_mat.mul(-2).exp().mean(dim=-1).log()
