@@ -87,11 +87,27 @@ class LitModel(pl.LightningModule):
             return laln, lunif, lunif_fv, lunq
         else: 
             return laln, lunif
+        
+    def get_values_with_neg(self, feats, proj, scores, train = True):
+        if self.use_rince:
+            return self.get_values_with_neg_rince(feats, proj, scores, train)
+        else:
+            return self.get_values_with_neg_mvcln(feats, proj, scores, train)
+    
+    def get_values_with_neg_mvcln(self, feats, proj, scores, train = True):
+        raise NotImplementedError("Not implemented yet")
+
+    def get_values_with_neg_rince(self, feats, proj, scores, train = True):
+        raise NotImplementedError("Not implemented yet")
 
     def training_step(self, batch, batch_idx):
         out, scores = self(batch)
 
-        laln, lunif, lunif_fv, lunq = self.get_values(batch, out, scores)
+        if self.use_neg:
+            func =  self.get_values_with_neg
+        else:
+            func = self.get_values
+        laln, lunif, lunif_fv, lunq = func(batch, out, scores)
 
         if self.use_unq:
             loss = laln.mean() + self.hpms.alpha * lunif.mean()  + 0.1 * lunif_fv.mean() + 0.1 * lunq
