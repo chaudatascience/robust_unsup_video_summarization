@@ -39,6 +39,7 @@ class LitModel(pl.LightningModule):
         self.is_raw = cfg.is_raw
         self.use_unq = cfg.use_unq
         self.use_unif = cfg.use_unif
+        self.use_ours = cfg.use_ours
 
         self.model_cfg = cfg.model
         self.data_cfg = cfg.data
@@ -90,7 +91,17 @@ class LitModel(pl.LightningModule):
         else: 
             return laln, lunif
         
+    
+    def get_values_with_neg_ours(self, feats, proj, scores, train=True):
+        our_lam = self.hpms.our_lam
+        rince = self.get_values_with_neg_rince(feats, proj, scores, train)
+        mvcln = self.get_values_with_neg_mvcln(feats, proj, scores, train)
+
+        return (our_lam * a + (1-our_lam) * b for a, b in zip(rince, mvcln))
+        
     def get_values_with_neg(self, feats, proj, scores, train = True):
+        if self.use_ours:
+            return self.get_values_with_neg_ours(feats, proj, scores, train)
         if self.use_rince:
             return self.get_values_with_neg_rince(feats, proj, scores, train)
         else:
