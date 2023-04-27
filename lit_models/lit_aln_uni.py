@@ -158,7 +158,7 @@ class LitModel(pl.LightningModule):
 
         laln = pos.mul(rince_q).exp().div(rince_q).mean(dim=-1)
         
-        lunif = diff_mat.sum(dim = -1).mul(rince_lam).pow(rince_q).div(rince_q)
+        lunif = diff_mat.exp().sum(dim = -1).mul(rince_lam).pow(rince_q).div(rince_q)
 
         if train:
             s = 20
