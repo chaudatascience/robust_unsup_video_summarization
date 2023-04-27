@@ -109,24 +109,15 @@ class LitModel(pl.LightningModule):
         L = feats.shape[1]
         S = int(L * self.hpms.ratio_s) 
         K1 = int(L * self.hpms.ratio_k1)
-
-        S_prime = L - (S+K1)
     
-        # MvCLN Algorithm
         pos = torch.gather(diff_mat, -1, sort_ids[:,:,S:S+K1])
-        neg = torch.gather(diff_mat, -1, sort_ids[:,:,S_prime:S_prime+K1])
         
-        # Calculate margin
-        m = pos.mean(dim=-1, keepdim=True) + neg.mean(dim=-1, keepdim=True)
+        neg = torch.gather(diff_mat, -1, sort_ids[:,:,S+K1:])
+        m = pos.mean(dim= -1, keepdim = True) + neg.mean(dim = -1, keepdim = True)
 
-        # Calculate L_neg
-        neg_loss = (neg.pow(1/2).mul(m) - neg.pow(3/2)).div(m).clip(min=0)
+        laln = pos.mean(dim=-1)
         
-        # mean(pos - L_neg)
-        laln = pos.mean(dim=-1) + neg_loss.mean(dim=-1)
-
-        
-        lunif = diff_mat.mul(-2).exp().mean(dim=-1).log()
+        lunif = (neg.pow(1/2).mul(m) - neg.pow(3/2)).clip(min = 0).div(m).mean(dim = -1)
 
         if train:
             s = 20
@@ -159,24 +150,15 @@ class LitModel(pl.LightningModule):
         L = feats.shape[1]
         S = int(L * self.hpms.ratio_s) 
         K1 = int(L * self.hpms.ratio_k1)
-
-        S_prime = L - (S+K1)
     
         # RINCE Algorithm
-        # q = self.hpms.q
         rince_q = self.hpms.rince_q
         rince_lam = self.hpms.rince_lam
         pos = torch.gather(diff_mat, -1, sort_ids[:,:,S:S+K1])
-        neg = torch.gather(diff_mat, -1, sort_ids[:,:,S_prime:S_prime+K1])
-    
-        # Calculate L_neg
-        neg_scalar = neg.exp().sum(dim=-1, keepdim = True).mul(rince_lam).pow(rince_q).div(rince_q)
-        
-        # mean(pos - L_neg)
-        laln = (pos.mul(rince_q).exp().div(rince_q) - neg_scalar).mean(dim=-1)
 
+        laln = pos.mul(rince_q).exp().div(rince_q).mean(dim=-1)
         
-        lunif = diff_mat.mul(-2).exp().mean(dim=-1).log()
+        lunif = diff_mat.sum(dim = -1).mul(rince_lam).pow(rince_q).div(rince_q)
 
         if train:
             s = 20
