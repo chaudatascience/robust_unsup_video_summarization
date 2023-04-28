@@ -67,8 +67,7 @@ def init_wandb(args, job_id, project_name, log_freq: int, model=None):
 
     ## run_name for wandb's run
 
-    watermark = "{}_{}_{}_{}".format(args.dataset,
-                                        args.tag,
+    watermark = "{}_{}_{}".format(args.data.name,
                                         job_id,
                                         time.strftime("%I-%M%p-%B-%d-%Y"))
 
@@ -83,8 +82,7 @@ def init_wandb(args, job_id, project_name, log_freq: int, model=None):
 class MyLogging:
     def __init__(self, args, model, job_id, project_name):
         self.args = args
-        log_freq = self.args.wandb_log_freq
-        dataset = args.dataset
+        dataset = args.data.name
         self.use_wandb = not args.no_wandb
 
         if self.use_wandb:
