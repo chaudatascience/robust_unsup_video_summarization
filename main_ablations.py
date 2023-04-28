@@ -167,6 +167,9 @@ if __name__ == "__main__":
     ### configure logger
     logger = MyLogging(configs, None, None, "robust_contrasive_learning") if configs.get("wandb", False) else None
 
+    if logger:
+        logger.log_config(configs)
+
     if configs.is_raw:
         configs.data.setting = 'Transfer'
     if configs.data.name == 'summe':
