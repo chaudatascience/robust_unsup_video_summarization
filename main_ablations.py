@@ -42,7 +42,7 @@ def get_parser(**parser_kwargs):
         metavar="base_config.yaml",
         help="paths to base configs. Loaded from left-to-right. "
         "Parameters can be overwritten or added with command-line options of the form `--key value`.",
-        default=list(),
+        default=["configs/aln_uni_config_ours.yml"],
     )
     
     parser.add_argument(
@@ -64,9 +64,9 @@ def nondefault_trainer_args(opt):
 
     return sorted(k for k in vars(args) if getattr(opt, k) != getattr(args, k))
 
-if __name__ == "__main__":
+def run():
     sys.path.append(os.getcwd())
-    
+
     now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 
     parser = get_parser()
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             raise ValueError("Cannot find {}".format(opt.resume))
         if os.path.isfile(opt.resume):
             paths = opt.resume.split("/")
-            idx = len(paths)-paths[::-1].index("logs")+1
+            idx = len(paths) - paths[::-1].index("logs") + 1
             logdir = "/".join(paths[:idx])
             ckpt = opt.resume
         else:
@@ -95,11 +95,11 @@ if __name__ == "__main__":
         opt.resume_from_checkpoint = ckpt
 
         base_configs = sorted(glob.glob(os.path.join(logdir, "configs/*.yaml")))
-        opt.base = base_configs+opt.base
+        opt.base = base_configs + opt.base
         _tmp = logdir.split("/")
-        name = _tmp[_tmp.index("logs")+1]
-        nowname = _tmp[_tmp.index("logs")+2]
-    
+        name = _tmp[_tmp.index("logs") + 1]
+        nowname = _tmp[_tmp.index("logs") + 2]
+
     else:
         if opt.name:
             name = opt.name
@@ -118,28 +118,29 @@ if __name__ == "__main__":
     configs = OmegaConf.merge(*configs, cli)
 
     # define log directories
-    logdir = os.path.join("logs",name, nowname)
+    logdir = os.path.join("logs", name, nowname)
     ckptdir = os.path.join(logdir, "checkpoints")
     cfgdir = os.path.join(logdir, "configs")
     configs.setup.logdir = logdir
-    configs.setup.ckptdir = ckptdir 
-    configs.setup.cfgdir = cfgdir 
+    configs.setup.ckptdir = ckptdir
+    configs.setup.cfgdir = cfgdir
     #### set up important trainer flags
     # merge trainer cli with config
     trainer_cfg = configs.lightning.get("trainer", OmegaConf.create())
-    for k in nondefault_trainer_args(opt): # this incorporates cli into trainer configs
+    for k in nondefault_trainer_args(opt):  # this incorporates cli into trainer configs
         trainer_cfg[k] = getattr(opt, k)
-    
+
     if not "gpus" in trainer_cfg:
         cpu = True
     else:
+        trainer_cfg["gpus"] = (0,)
         gpuinfo = trainer_cfg["gpus"]
         print(f"Running on GPUs {gpuinfo}")
         cpu = False
 
     trainer_opt = argparse.Namespace(**trainer_cfg)
     configs.lightning.trainer = trainer_cfg
-    
+
     #### configure learning rate
     lr = configs.hparams.lr
     if not cpu:
@@ -147,14 +148,12 @@ if __name__ == "__main__":
     else:
         ngpu = 0
 
-   
-
     trainer_kwargs = dict()
     ### configure callbacks
     checkpoint_callback = ModelCheckpoint(dirpath=ckptdir,
-                                        filename="{epoch:06}",
-                                        verbose=True,
-                                        save_last=True)
+                                          filename="{epoch:06}",
+                                          verbose=True,
+                                          save_last=True)
     setup_callback = SetupCallback(resume=opt.resume,
                                    now=now,
                                    logdir=logdir,
@@ -168,7 +167,7 @@ if __name__ == "__main__":
     logger = MyLogging(configs, None, None, "robust_contrasive_learning") if configs.get("wandb", False) else None
 
     if logger:
-        logger.log_config(configs)
+        logger.log_config(configs.hparams)
 
     if configs.is_raw:
         configs.data.setting = 'Transfer'
@@ -176,47 +175,52 @@ if __name__ == "__main__":
         configs.hparams.batch_size = 8
     ### initialize trainer
     if configs.data.setting != 'Transfer':
-        results = {'F1':[], 'tau':[], 'rho':[]}
+        results = {'F1': [], 'tau': [], 'rho': []}
         for split in range(5):
             configs.data.split = split
 
-            trainer = Trainer.from_argparse_args(trainer_opt, 
-                                        **trainer_kwargs,
-                                        plugins=DDPPlugin(find_unused_parameters=True))
+            trainer = Trainer.from_argparse_args(trainer_opt,
+                                                 **trainer_kwargs,
+                                                 plugins=DDPPlugin(find_unused_parameters=True))
 
             model = LitModel(configs, configs.hparams)
-            if not configs.is_raw:                
+            if not configs.is_raw:
                 trainer.fit(model)
             results_split = trainer.test(model)[0]
             for key in results_split:
                 results[key].append(results_split[key])
         if logger:
             logger.info({"F-score": np.mean(results['F1']),
-                        "Tau": np.mean(results['tau']),
-                        "R": np.mean(results['rho'])})
+                         "Tau": np.mean(results['tau']),
+                         "R": np.mean(results['rho'])})
             logger.finish()
 
         else:
             print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(np.mean(results['F1']),
-                                                                    np.mean(results['tau']), 
-                                                                    np.mean(results['rho'])))
-        print(f'{configs.data.name}_{configs.data.setting}_trained_lunif_{configs.use_unif}_unq_{configs.use_unq}_neg_{configs.use_neg}_rince_{configs.use_rince}')
-    else: 
-        trainer = Trainer.from_argparse_args(trainer_opt, 
-                                        **trainer_kwargs,
-                                        plugins=DDPPlugin(find_unused_parameters=True))
+                                                                        np.mean(results['tau']),
+                                                                        np.mean(results['rho'])))
+        print(
+            f'{configs.data.name}_{configs.data.setting}_trained_lunif_{configs.use_unif}_unq_{configs.use_unq}_neg_{configs.use_neg}_rince_{configs.use_rince}')
+    else:
+        trainer = Trainer.from_argparse_args(trainer_opt,
+                                             **trainer_kwargs,
+                                             plugins=DDPPlugin(find_unused_parameters=True))
         model = LitModel(configs, configs.hparams)
-        if not configs.is_raw:                
+        if not configs.is_raw:
             trainer.fit(model)
         results = trainer.test(model)[0]
         if logger:
             logger.info({"F-score": results['F1'],
-                        "Tau": results['tau'],
-                        "R": results['rho']})
+                         "Tau": results['tau'],
+                         "R": results['rho']})
             logger.finish()
         else:
             print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(results['F1'], results['tau'], results['rho']))
         if configs.is_raw:
             print(f'{configs.data.name}_raw_lunif_{configs.use_unif}')
-        else: 
-            print(f'{configs.data.name}_lunif_{configs.use_unif}_unq_{configs.use_unq}_neg_{configs.use_neg}_rince_{configs.use_rince}')
+        else:
+            print(
+                f'{configs.data.name}_lunif_{configs.use_unif}_unq_{configs.use_unq}_neg_{configs.use_neg}_rince_{configs.use_rince}')
+
+if __name__ == "__main__":
+    run()
