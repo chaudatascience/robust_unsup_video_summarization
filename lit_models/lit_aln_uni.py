@@ -95,9 +95,10 @@ class LitModel(pl.LightningModule):
     def get_values_with_neg_ours(self, feats, proj, scores, train=True):
         our_lam = self.hpms.our_lam
         rince = self.get_values_with_neg_rince(feats, proj, scores, train)
-        mvcln = self.get_values_with_neg_mvcln(feats, proj, scores, train)
-
-        return (our_lam * a + (1-our_lam) * b for a, b in zip(rince, mvcln))
+        mvcln = self.get_values_with_neg_mvcln(feats, proj, scores, False)
+        rince[0] = our_lam * rince[0] + (1-our_lam) * mvcln[0]
+        rince[1] = our_lam * rince[1] + (1-our_lam) * mvcln[1]
+        return rince
         
     def get_values_with_neg(self, feats, proj, scores, train = True):
         if self.use_ours:
