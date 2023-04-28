@@ -20,7 +20,6 @@ hparams:
   batch_size: 32
   n_layer: 4
   n_head: 1
-  # Ablation on this
   ratio_s:  0.2
   rince_q: 0.3
   rince_lam: 0.5
