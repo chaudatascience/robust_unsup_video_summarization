@@ -83,7 +83,7 @@ class MyLogging:
     def __init__(self, args, model, job_id, project_name):
         self.args = args
         dataset = args.data.name
-        self.use_wandb = not args.no_wandb
+        self.use_wandb = True
 
         if self.use_wandb:
             init_wandb(args, project_name=project_name, model=model, job_id=job_id, log_freq=log_freq)
