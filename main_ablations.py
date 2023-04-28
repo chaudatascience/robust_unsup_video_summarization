@@ -133,9 +133,6 @@ def run():
     if not "gpus" in trainer_cfg:
         cpu = True
     else:
-        trainer_cfg["gpus"] = (0,)
-        gpuinfo = trainer_cfg["gpus"]
-        print(f"Running on GPUs {gpuinfo}")
         cpu = False
 
     trainer_opt = argparse.Namespace(**trainer_cfg)
@@ -144,7 +141,7 @@ def run():
     #### configure learning rate
     lr = configs.hparams.lr
     if not cpu:
-        ngpu = len(configs.lightning.trainer.gpus.strip(",").split(','))
+        ngpu = 1
     else:
         ngpu = 0
 
