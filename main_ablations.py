@@ -194,6 +194,8 @@ if __name__ == "__main__":
             logger.info({"F-score": np.mean(results['F1']),
                         "Tau": np.mean(results['tau']),
                         "R": np.mean(results['rho'])})
+            logger.finish()
+
         else:
             print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(np.mean(results['F1']),
                                                                     np.mean(results['tau']), 
@@ -211,6 +213,7 @@ if __name__ == "__main__":
             logger.info({"F-score": results['F1'],
                         "Tau": results['tau'],
                         "R": results['rho']})
+            logger.finish()
         else:
             print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(results['F1'], results['tau'], results['rho']))
         if configs.is_raw:
