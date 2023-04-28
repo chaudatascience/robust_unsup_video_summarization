@@ -10,8 +10,8 @@ from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger, CSVLogger
 
-
-from lit_models.lit_aln_uni import LitModel 
+from custom_log import MyLogging
+from lit_models.lit_aln_uni import LitModel
 from custom_callbacks import SetupCallback
 
 def get_parser(**parser_kwargs):
@@ -164,18 +164,8 @@ if __name__ == "__main__":
 
     trainer_kwargs["callbacks"] = [checkpoint_callback,
                                    setup_callback]
-    # ### configure logger
-    # if configs.is_raw:
-    #     logname = name + '_raw'
-    # logname = name + '_align'
-    # if configs.use_unif:
-    #     logname += 'align_unif'
-    # if (not confgs_is_raw) and (configs.use_unq):
-    #     logname += '_unq'
-
-    # logger = CSVLogger(logdir, name=logname)
-
-    # trainer_kwargs["logger"] = logger
+    ### configure logger
+    logger = MyLogging(configs, None, None, "robust_contrasive_learning") if configs.get("wandb", False) else None
 
     if configs.is_raw:
         configs.data.setting = 'Transfer'
@@ -197,7 +187,12 @@ if __name__ == "__main__":
             results_split = trainer.test(model)[0]
             for key in results_split:
                 results[key].append(results_split[key])
-        print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(np.mean(results['F1']),
+        if logger:
+            logger.info({"F-score": np.mean(results['F1']),
+                        "Tau": np.mean(results['tau']),
+                        "R": np.mean(results['rho'])})
+        else:
+            print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(np.mean(results['F1']),
                                                                     np.mean(results['tau']), 
                                                                     np.mean(results['rho'])))
         print(f'{configs.data.name}_{configs.data.setting}_trained_lunif_{configs.use_unif}_unq_{configs.use_unq}_neg_{configs.use_neg}_rince_{configs.use_rince}')
@@ -209,7 +204,12 @@ if __name__ == "__main__":
         if not configs.is_raw:                
             trainer.fit(model)
         results = trainer.test(model)[0]
-        print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(results['F1'], results['tau'], results['rho']))
+        if logger:
+            logger.info({"F-score": results['F1'],
+                        "Tau": results['tau'],
+                        "R": results['rho']})
+        else:
+            print("Average F-score {:.2%}, Tau {:.4f}, R {:.4f}".format(results['F1'], results['tau'], results['rho']))
         if configs.is_raw:
             print(f'{configs.data.name}_raw_lunif_{configs.use_unif}')
         else: 

@@ -40,3 +40,5 @@ use_unif: True
 use_neg: True
 use_rince: True
 use_ours: True
+
+wandb: True
