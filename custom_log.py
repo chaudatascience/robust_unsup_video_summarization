@@ -55,7 +55,7 @@ def get_py_logger(dataset_name: str, job_id: str = None):
     return logger  # , logger_name, logger_path
 
 
-def init_wandb(args, job_id, project_name, log_freq: int, model=None):
+def init_wandb(args, job_id, project_name, log_freq=0, model=None):
     # wandb.run.dir
     # https://docs.wandb.ai/guides/track/advanced/save-restore
 
@@ -86,7 +86,7 @@ class MyLogging:
         self.use_wandb = True
 
         if self.use_wandb:
-            init_wandb(args, project_name=project_name, model=model, job_id=job_id, log_freq=log_freq)
+            init_wandb(args, project_name=project_name, model=model, job_id=job_id)
 
     def info(self, msg: Union[Dict, str], use_wandb=None, sep=", ", padding_space=False, pref_msg: str = ""):
         use_wandb = default(use_wandb, self.use_wandb)
